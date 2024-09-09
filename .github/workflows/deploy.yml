@@ -25,19 +25,7 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
 
-      # Step 4: Install Node.js and run Laravel Mix (if applicable)
-      - name: Set up Node.js and NPM
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-
-      - name: Install Node.js dependencies
-        run: npm install
-
-      - name: Build assets with Laravel Mix
-        run: npm run prod
-
-      # Step 5: Sync code to EC2 instance using SSH
+      # Step 4: Sync code to EC2 instance using SSH
       - name: Sync files to EC2
         uses: appleboy/scp-action@v0.1.0
         with:
@@ -48,7 +36,7 @@ jobs:
           target: '/var/www/cafeteria-api'  # Path on the EC2 instance where Laravel app is deployed
           recursive: true                  # Copy all files recursively
 
-      # Step 6: SSH into EC2 to run migration, cache, and restart services
+      # Step 5: SSH into EC2 to run migration, cache, and restart services
       - name: SSH to EC2 and run deployment commands
         uses: appleboy/ssh-action@v0.1.0
         with:
