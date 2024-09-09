@@ -1,0 +1,66 @@
+name: Deploy Laravel to EC2
+
+on:
+  push:
+    branches:
+      - main  # Run this workflow on every push to the 'main' branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up PHP environment for Laravel
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'  # Ensure this matches your PHP version
+          extensions: mbstring, bcmath, xml
+
+      # Step 3: Install Composer dependencies for Laravel
+      - name: Install Composer dependencies
+        run: composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+      # Step 4: Install Node.js and run Laravel Mix (if applicable)
+      - name: Set up Node.js and NPM
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Build assets with Laravel Mix
+        run: npm run prod
+
+      # Step 5: Sync code to EC2 instance using SSH
+      - name: Sync files to EC2
+        uses: appleboy/scp-action@v0.1.0
+        with:
+          host: ${{ secrets.EC2_HOST }}    # Your EC2 instance IP
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # Private key from GitHub secrets
+          source: './'                     # Sync the entire repo contents
+          target: '/var/www/cafeteria-api'  # Path on the EC2 instance where Laravel app is deployed
+          recursive: true                  # Copy all files recursively
+
+      # Step 6: SSH into EC2 to run migration, cache, and restart services
+      - name: SSH to EC2 and run deployment commands
+        uses: appleboy/ssh-action@v0.1.0
+        with:
+          host: ${{ secrets.EC2_HOST }}    # Your EC2 instance IP
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # Private key from GitHub secrets
+          script: |
+            cd /var/www/cafeteria-api
+            composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            sudo systemctl restart nginx
+            sudo systemctl restart php8.3-fpm
