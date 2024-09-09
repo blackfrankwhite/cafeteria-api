@@ -25,15 +25,15 @@ jobs:
       - name: Check Secrets Presence
         run: |
           if [ -z "${{ secrets.EC2_HOST }}" ]; then
-            echo "EC2_HOST secret is missing!"
+            echo "::error::EC2_HOST secret is missing!"
           else
-            echo "EC2_HOST is set."
+            echo "EC2_HOST secret is set."
           fi
 
           if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
-            echo "SSH_PRIVATE_KEY secret is missing!"
+            echo "::error::SSH_PRIVATE_KEY secret is missing!"
           else
-            echo "SSH_PRIVATE_KEY is set."
+            echo "SSH_PRIVATE_KEY secret is set."
           fi
 
       # Step 4: Install Composer dependencies for Laravel
