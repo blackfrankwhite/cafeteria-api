@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return 'test';
-    
+    return 'ait nugia';
+
     return view('welcome');
 });
