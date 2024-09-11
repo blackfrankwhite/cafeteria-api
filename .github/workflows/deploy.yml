@@ -31,6 +31,7 @@ jobs:
           
           # Step 1: Pull the latest changes from the main branch
           sudo git pull https://x-access-token:${{ secrets.TOKEN_GITHUB }}@github.com/blackfrankwhite/cafeteria-api.git main
+          sudo git stash pop || true
 
           # Step 2: Install composer dependencies
           export COMPOSER_ALLOW_SUPERUSER=1
@@ -46,7 +47,7 @@ jobs:
           sudo php artisan view:cache
 
           # Step 5: Fix file and folder permissions
-          sudo chown -R www-data:www-data /var/www/cafeteria-api
+          sudo chown -R ubuntu:www-data /var/www/cafeteria-api
           sudo find /var/www/cafeteria-api/storage -type f -exec chmod 664 {} \;
           sudo find /var/www/cafeteria-api/storage -type d -exec chmod 775 {} \;
           sudo find /var/www/cafeteria-api/bootstrap/cache -type f -exec chmod 664 {} \;
