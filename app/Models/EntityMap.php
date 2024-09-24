@@ -14,6 +14,7 @@ class EntityMap extends Model
         'child_id',
         'measurement_type',
         'measurement_amount',
+        'user_id'
     ];
     
     protected $visible = [

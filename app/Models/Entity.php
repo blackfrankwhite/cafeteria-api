@@ -34,7 +34,7 @@ class Entity extends Model
     public function ingredients()
     {
         return $this->hasMany(EntityMap::class, 'parent_id')->with('child');
-    }
+    }    
 
     public function parent()
     {

@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('entities', function (Blueprint $table) {
-            $table->unsignedBigInteger('user_id')->nullable();
-
-            $table->foreign('user_id')->references('id')->on('users');
+        Schema::create('accountings', function (Blueprint $table) {
+            $table->id();
+            $table->string('title')->nullable();
+            $table->dateTime('date')->unique();
+            $table->timestamps();
         });
     }
 
@@ -23,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('entities', function (Blueprint $table) {
-            $table-dropColumn('user_id');
-        });
+        Schema::dropIfExists('accountings');
     }
 };

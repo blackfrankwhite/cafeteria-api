@@ -16,18 +16,18 @@ class EntityController extends Controller
 
     public function getAllEntities(Request $request)
     {
-        return $this->repository->getAllEntities(auth()->id());
+        return $this->repository->getAllEntities();
     }
 
     public function getEntityByID($id)
     {
-        return $this->repository->getEntityByID(auth()->id(), $id);
+        return $this->repository->getEntityByID($id);
     }
 
     public function updateEntity(Request $request, $id)
     {        
         $data = $request->all();
-        return $this->repository->updateEntity(auth()->id(), $id, $data);
+        return $this->repository->updateEntity($id, $data);
     }
 
     public function createEntity(Request $request)
@@ -42,7 +42,7 @@ class EntityController extends Controller
             'ingredients.*.measurement_amount' => 'required|numeric|min:0',
         ]);
 
-        return $this->repository->createEntity($request->all(), auth()->id());    
+        return $this->repository->createEntity($request->all());    
     }
 
     public function deleteEntity(Request $request, $id)
@@ -52,16 +52,21 @@ class EntityController extends Controller
 
     public function getIngredients(Request $request)
     {
-        return $this->repository->getIngredients(null);
+        return $this->repository->getIngredients();
     }
 
     public function getDishes(Request $request)
     {
-        return $this->repository->getDishes(null);
+        return $this->repository->getDishes();
+    }
+
+    public function getDishByID(Request $request, $dishID)
+    {
+        return $this->repository->getDishByID($dishID);
     }
 
     public function getMixes(Request $request)
     {
-        return $this->repository->getMixes(null);
+        return $this->repository->getMixes();
     }
 }

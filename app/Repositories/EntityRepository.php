@@ -8,10 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 class EntityRepository
 {
-    public function getWithIngredients($userId)
+    public function getWithIngredients()
     {
-        $entities = Entity::where('user_id', $userId)
-            ->where('type', 'dish')
+        $entities = Entity::where('type', 'dish')
             ->with(['ingredients.child', 'ingredients.child.ingredients.child'])
             ->get()
             ->toArray();
@@ -134,30 +133,16 @@ class EntityRepository
         ]);
     }
 
-    public function getEntityById($userId, $id)
+    public function getEntityById($id)
     {
-        $dish = Entity::where('user_id', $userId)->findOrFail($id);
-        $ingredients = EntityMap::with('child')->where('parent_id', $id)->get();
+        $entity = Entity::findOrFail($id);
 
-        $ingrArr = [];
-
-        foreach ($ingredients as $ingredient) {
-            $ingrArr[]= [
-                'id' => $ingredient->child->id,
-                'measurement_type' => $ingredient->child->measurement_type,
-                'measurement_amount' => $ingredient->child->measurement_amount,
-                'title' => $ingredient->child->title,
-            ];
-        }
-        return response()->json([
-            'entity' => $dish,
-            'ingredients' => $ingrArr
-        ]);
+        return $entity;
     }
 
-    public function updateEntityIngredients($userId, $id, $ingredientsData)
+    public function updateEntityIngredients($id, $ingredientsData)
     {
-        $dish = Entity::where('user_id', $userId)->findOrFail($id);
+        $dish = Entity::findOrFail($id);
     
         DB::transaction(function () use ($id, $ingredientsData) {
             EntityMap::where('parent_id', $id)->delete();
@@ -175,9 +160,9 @@ class EntityRepository
         return response()->json(['message' => 'Dish updated successfully']);
     }
 
-    public function getAllEntities($userId, $filters = [])
+    public function getAllEntities($filters = [])
     {
-        $query = Entity::where('user_id', $userId);
+        $query = Entity::query();
 
         if (isset($filters['type'])) {
             $query->where('type', $filters['type']);
@@ -186,7 +171,7 @@ class EntityRepository
         return response()->json($query->get());
     }
 
-    public function createEntity($data, $userId)
+    public function createEntity($data)
     {
         $entity = Entity::create([
             'title' => $data['title'],
@@ -194,7 +179,6 @@ class EntityRepository
             'measurement_type' => $data['measurement_type'],
             'measurement_amount' => 1,
             'price' => $data['price'] ?? null,
-            'user_id' => $userId ?? null
         ]);
 
         $ingredients = $data['ingredients'] ?? [];
@@ -208,12 +192,12 @@ class EntityRepository
             ]);
         }
     
-        return response()->json(['message' => 'Dish created successfully'], 201);
+        return response()->json(['message' => 'entity created successfully'], 201);
     }
 
-    public function deleteEntity($userId, $id)
+    public function deleteEntity($id)
     {
-        $dish = Entity::where('user_id', $userId)->findOrFail($id);
+        $dish = Entity::findOrFail($id);
         
         EntityMap::where('child_id', $id)
             ->orWhere('parent_id', $id)
@@ -221,10 +205,10 @@ class EntityRepository
     
         $dish->delete();
     
-        return response()->json(['message' => 'Dish deleted successfully'], 201);
+        return response()->json(['message' => 'entity deleted successfully'], 201);
     }
 
-    public function getIngredients($userId)
+    public function getIngredients()
     {
         $ingredients = Entity::where('type', 'ingredient')
             ->get();
@@ -232,10 +216,9 @@ class EntityRepository
         return $ingredients;
     }
 
-    public function updateIngredient($userId, $id, $data)
+    public function updateIngredient($id, $data)
     {
         return Entity::where('id', $id)
-            ->where('user_id', $userId)
             ->update([
                 'title' => $data['title'],
                 'price' => $data['price'],
@@ -243,7 +226,7 @@ class EntityRepository
             ]);
     }
 
-    public function addIngredient($userId, $data)
+    public function addIngredient($data)
     {
         Entity::create([
             'title' => $data['title'],
@@ -251,27 +234,41 @@ class EntityRepository
             'measurement_type' => $data['measurement_type'],
             'measurement_amount' => 1,
             'price' => $data['price'] ?? null,
-            'user_id' => $userId
         ]);
     
         return response()->json(['message' => 'Ingredient added successfully'], 201);
     }
 
-    public function getDishes($userId)
+    public function getDishes()
     {
         $dishes = Entity::where('type', 'dish')
-            ->where('user_id', $userId)
             ->get();
     
         return $dishes;
     }
 
-    public function getMixes($userId)
+    public function getMixes()
     {
         $mixes = Entity::where('type', 'mix')
-            ->where('user_id', $userId)
             ->get();
     
         return $mixes;
+    }
+
+    public function getDishByID($id)
+    {
+        $dish = Entity::with('ingredients.child')
+            ->findOrFail($id)
+            ->toArray();
+
+        $ingredientsArr = [];
+
+        foreach ($dish['ingredients'] as $ingredient) {
+            $ingredientsArr[]= $ingredient['child'];
+        }
+
+        $dish['ingredients'] = $ingredientsArr;
+    
+        return response()->json($dish);
     }
 }
