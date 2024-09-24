@@ -44,7 +44,7 @@ class AccountingController extends Controller
         return response()->json($this->accountingRepository->getAccountingRecords($accountingID));
     }
 
-    public function createAccountingRecord(Request $request, $accountingID, $recordID)
+    public function createAccountingRecord(Request $request, $accountingID)
     {
         return response()->json($this->accountingRepository->createAccountingRecord($accountingID, $request->all()));
     }
