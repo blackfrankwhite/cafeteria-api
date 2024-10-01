@@ -35,7 +35,11 @@ class PurchaseRepository
 
     public function getPurchaseRecords($purchaseID)
     {
-        return PurchaseRecord::where('purchase_id', $purchaseID)->get();
+        return DB::table('purchase_records')
+            ->join('purchases', 'purchase_records.purchase_id', 'purchases.id')
+            ->select('purchase_records.*', 'purchases.title as title')
+            ->where('purchase_id', $purchaseID)
+            ->get();
     }
 
     public function createPurchaseRecord($id, $data)

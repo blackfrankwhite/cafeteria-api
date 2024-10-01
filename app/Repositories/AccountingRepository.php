@@ -35,7 +35,10 @@ class AccountingRepository
 
     public function getAccountingRecords($accountingID)
     {
-        return AccountingRecord::where('accounting_id', $accountingID)->get();
+        return DB::table('accounting_records')->where('accounting_id', $accountingID)
+            ->join('accountings', 'accounting_records.accounting_id', 'accountings.id')
+            ->select('accounting_records.*', 'accountings.title as title')
+            ->get();
     }
 
     public function createAccountingRecord($id, $data)
