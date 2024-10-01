@@ -37,7 +37,8 @@ class PurchaseRepository
     {
         return DB::table('purchase_records')
             ->join('purchases', 'purchase_records.purchase_id', 'purchases.id')
-            ->select('purchase_records.*', 'purchases.title as title')
+            ->join('entities', 'purchase_records.entity_id', 'entities.id')
+            ->select('purchase_records.*', 'purchases.title as purchase_title', 'entities.title as entity_title')
             ->where('purchase_id', $purchaseID)
             ->get();
     }

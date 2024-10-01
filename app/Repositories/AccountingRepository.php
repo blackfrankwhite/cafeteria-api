@@ -36,8 +36,9 @@ class AccountingRepository
     public function getAccountingRecords($accountingID)
     {
         return DB::table('accounting_records')->where('accounting_id', $accountingID)
+            ->join('entities', 'accounting_records.entity_id', 'entities.id')
             ->join('accountings', 'accounting_records.accounting_id', 'accountings.id')
-            ->select('accounting_records.*', 'accountings.title as title')
+            ->select('accounting_records.*', 'accountings.title as accounting_title', 'entities.title as entity_title')
             ->get();
     }
 
