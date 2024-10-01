@@ -7,9 +7,18 @@ use App\Http\Controllers\AccountingController;
 use App\Http\Controllers\PurchaseController;
 
 Route::prefix('entity')->group(function () {
-    Route::get('/ingredients', [EntityController::class, 'getIngredients']);
-    Route::get('/dishes', [EntityController::class, 'getDishes']);
-    Route::get('/dishes/{dishID}', [EntityController::class, 'getDishByID']);
+
+    Route::prefix('dishes')->group(function () {
+        Route::get('', [EntityController::class, 'getDishes']);
+        Route::get('{dishID}', [EntityController::class, 'getDishByID']);
+        Route::put('{dishID}', [EntityController::class, 'updateDish']);
+    });
+
+    Route::prefix('ingredients')->group(function () {
+        Route::get('/', [EntityController::class, 'getIngredients']);
+        Route::put('/{ingredientID}', [EntityController::class, 'updateIngredient']);
+    });
+
     Route::get('/mixes', [EntityController::class, 'getMixes']);
     Route::post('/', [EntityController::class, 'createEntity']);
     Route::delete('/{id}', [EntityController::class, 'deleteEntity']);

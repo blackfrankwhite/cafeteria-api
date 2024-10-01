@@ -32,15 +32,20 @@ class EntityController extends Controller
 
     public function createEntity(Request $request)
     {
-        $request->validate([
+        $validator = \Validator::make($request->all(), [
             'type' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'measurement_type' => 'required|string',
+            'price' => 'required|numeric|min:0',
             'ingredients' => 'sometimes|array',
             'ingredients.*.id' => 'required|integer|exists:entities,id',
             'ingredients.*.measurement_type' => 'required|string',
             'ingredients.*.measurement_amount' => 'required|numeric|min:0',
         ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
         return $this->repository->createEntity($request->all());    
     }
@@ -69,4 +74,47 @@ class EntityController extends Controller
     {
         return $this->repository->getMixes();
     }
+
+    public function updateIngredient(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'title' => 'sometimes|string|max:255',
+            'measurement_type' => 'sometimes|string',
+            'price' => 'sometimes|numeric|min:0',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $id = $request->route('ingredientID');
+
+        return $this->repository->updateIngredient($id, $request->all());    
+    }
+
+    public function updateDish(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'title' => 'sometimes|string|max:255',
+            'price' => 'sometimes|numeric|min:0',
+            'measurement_type' => 'sometimes|string',
+            'ingredients' => 'sometimes|array',
+            'ingredients.*.id' => 'required|integer|exists:entities,id',
+            'ingredients.*.measurement_amount' => 'required|numeric|min:0',
+            'ingredients.*.measurement_type' => 'sometimes|string',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+     
+        $ingredients = $request->get('ingredients');
+        $dishData = $request->except('ingredients');
+
+        $id = $request->route('dishID');
+
+        return $this->repository->updateDish($id, $dishData, $ingredients);    
+    }
+
 }

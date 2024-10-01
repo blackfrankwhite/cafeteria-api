@@ -140,26 +140,6 @@ class EntityRepository
         return $entity;
     }
 
-    public function updateEntityIngredients($id, $ingredientsData)
-    {
-        $dish = Entity::findOrFail($id);
-    
-        DB::transaction(function () use ($id, $ingredientsData) {
-            EntityMap::where('parent_id', $id)->delete();
-    
-            foreach ($ingredientsData as $ingredient) {
-                EntityMap::create([
-                    'parent_id' => $id,
-                    'child_id' => $ingredient['id'],
-                    'measurement_type' => $ingredient['measurement_type'],
-                    'measurement_amount' => $ingredient['measurement_amount']
-                ]);
-            }
-        });
-    
-        return response()->json(['message' => 'Dish updated successfully']);
-    }
-
     public function getAllEntities($filters = [])
     {
         $query = Entity::query();
@@ -192,7 +172,10 @@ class EntityRepository
             ]);
         }
     
-        return response()->json(['message' => 'entity created successfully'], 201);
+        return response()->json([
+            'message' => 'Entity created successfully',
+            'id' => $entity->id
+        ], 201);
     }
 
     public function deleteEntity($id)
@@ -219,12 +202,41 @@ class EntityRepository
     public function updateIngredient($id, $data)
     {
         return Entity::where('id', $id)
-            ->update([
-                'title' => $data['title'],
-                'price' => $data['price'],
-                'measurement_type' => $data['measurement_type']
-            ]);
+            ->where('type', 'ingredient')
+            ->update($data);
     }
+
+    public function updateDish($id, $data, $ingredients)
+    {
+        $entity = Entity::findOrFail($id);
+        $entity->update($data);
+    
+        $existingIngredients = EntityMap::where('parent_id', $id)->get()->keyBy('child_id');
+    
+        foreach ($ingredients as $ingredient) {
+            if (isset($existingIngredients[$ingredient['id']])) {
+                $existingIngredient = $existingIngredients[$ingredient['id']];
+                $existingIngredient->update([
+                    'measurement_amount' => $ingredient['measurement_amount'],
+                ]);
+            } else {
+                EntityMap::create([
+                    'parent_id' => $entity->id,
+                    'child_id' => $ingredient['id'],
+                    'measurement_amount' => $ingredient['measurement_amount'],
+                    'measurement_type' => $ingredient['measurement_type'] ?? 'unit',
+                ]);
+            }
+        }
+    
+        $ingredientIds = array_column($ingredients, 'id');
+        EntityMap::where('parent_id', $id)
+            ->whereNotIn('child_id', $ingredientIds)
+            ->delete();
+    
+        return response()->json(['message' => 'Dish updated successfully'], 201);
+    }
+    
 
     public function addIngredient($data)
     {
