@@ -294,7 +294,7 @@ class EntityRepository
             ->where('id', $id)
             ->where('type', 'dish')
             ->first();
-            
+
         $dish->ingredients = json_decode($dish->ingredients, true);
        
         return response()->json($dish);

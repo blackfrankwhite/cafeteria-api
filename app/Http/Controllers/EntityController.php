@@ -52,7 +52,7 @@ class EntityController extends Controller
 
     public function deleteEntity(Request $request, $id)
     {
-        return $this->repository->deleteEntity(auth()->id(), $id);    
+        return $this->repository->deleteEntity($id);    
     }
 
     public function getIngredients(Request $request)
