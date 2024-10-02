@@ -194,7 +194,7 @@ class EntityRepository
     public function getIngredients()
     {
         $ingredients = Entity::where('type', 'ingredient')
-            ->get();
+            ->paginate();
     
         return $ingredients;
     }
@@ -261,7 +261,7 @@ class EntityRepository
                 DB::raw('SUM(child_entities.price * entity_maps.measurement_amount) as ingredients_cost')
             )
             ->groupBy('entities.id')
-            ->get();
+            ->paginate();
 
         $dishes->makeVisible('ingredients_cost');
     
