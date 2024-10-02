@@ -253,8 +253,17 @@ class EntityRepository
 
     public function getDishes()
     {
-        $dishes = Entity::where('type', 'dish')
+        $dishes = Entity::where('entities.type', 'dish')
+            ->leftJoin('entity_maps', 'entities.id', '=', 'entity_maps.parent_id')
+            ->leftJoin('entities as child_entities', 'entity_maps.child_id', '=', 'child_entities.id')
+            ->select(
+                'entities.*',
+                DB::raw('SUM(child_entities.price * entity_maps.measurement_amount) as ingredients_cost')
+            )
+            ->groupBy('entities.id')
             ->get();
+
+        $dishes->makeVisible('ingredients_cost');
     
         return $dishes;
     }
