@@ -275,6 +275,7 @@ class EntityRepository
                     ->join('entities as child_entities', 'em.child_id', '=', 'child_entities.id')
                     ->select(
                         'em.parent_id',
+                        DB::raw('SUM(child_entities.price * em.measurement_amount) as total_price'),
                         DB::raw('JSON_ARRAYAGG(JSON_OBJECT("id", child_entities.id, "title", child_entities.title, "type", child_entities.type, "measurement_type", em.measurement_type, "measurement_amount", em.measurement_amount, "price", child_entities.price)) as children')
                         )
                     ->groupBy('em.parent_id'),
@@ -290,6 +291,7 @@ class EntityRepository
                 'entities.measurement_amount',
                 'entities.config',
                 DB::raw('COALESCE(child_data.children, JSON_ARRAY()) as ingredients'),
+                DB::raw('COALESCE(child_data.total_price, 0) as ingredients_cost')
             )
             ->where('id', $id)
             ->where('type', 'dish')
