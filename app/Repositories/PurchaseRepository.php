@@ -11,13 +11,14 @@ class PurchaseRepository
    public function getPurchases($perPage = 10)
    {
        return Purchase::LeftJoin('purchase_records', 'purchases.id', 'purchase_records.purchase_id')
-           ->select(
-               'purchases.*', 
-               DB::raw('SUM(purchase_records.price * purchase_records.amount) as total_price'),
-               DB::raw('SUM(purchase_records.amount) as total_amount')
-               )
-           ->groupBy('purchases.id')
-           ->paginate($perPage);
+            ->select(
+                'purchases.*', 
+                DB::raw('SUM(purchase_records.price * purchase_records.amount) as total_price'),
+                DB::raw('SUM(purchase_records.amount) as total_amount')
+                )
+            ->groupBy('purchases.id')
+            ->orderBy('purchases.id', 'DESC')
+            ->paginate($perPage);
    }
 
     public function createPurchase($data)
@@ -61,6 +62,7 @@ class PurchaseRepository
                 )
             ->where('purchase_id', $purchaseID)
             ->groupBy('purchase_records.id')
+            ->orderBy('purchase_records.id', 'DESC')
             ->get();
     }
 

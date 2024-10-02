@@ -142,7 +142,8 @@ class EntityRepository
 
     public function getAllEntities($filters = [])
     {
-        $query = Entity::query();
+        $query = Entity::query()
+            ->orderBy('id', 'DESC');
 
         if (isset($filters['type'])) {
             $query->where('type', $filters['type']);
@@ -194,6 +195,7 @@ class EntityRepository
     public function getIngredients($perPage = 10)
     {
         $ingredients = Entity::where('type', 'ingredient')
+            ->orderBy('id', 'DESC')
             ->paginate($perPage);
     
         return $ingredients;
@@ -261,6 +263,7 @@ class EntityRepository
                 DB::raw('SUM(child_entities.price * entity_maps.measurement_amount) as ingredients_cost')
             )
             ->groupBy('entities.id')
+            ->orderBy('entities.id', 'DESC')
             ->paginate($perPage);
 
         $dishes->makeVisible('ingredients_cost');
@@ -271,6 +274,7 @@ class EntityRepository
     public function getMixes()
     {
         $mixes = Entity::where('type', 'mix')
+            ->orderBy('id', 'DESC')
             ->get();
     
         return $mixes;

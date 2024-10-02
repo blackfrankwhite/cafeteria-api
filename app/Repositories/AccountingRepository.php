@@ -18,6 +18,7 @@ class AccountingRepository
                 DB::raw('SUM(accounting_records.amount) as total_amount')
                 )
             ->groupBy('accountings.id')
+            ->orderBy('accountings.id', 'DESC')
             ->paginate($perPage);
     }
 
@@ -61,6 +62,7 @@ class AccountingRepository
                 DB::raw('SUM(accounting_records.amount) as total_amount')
                 )
             ->groupBy('accounting_records.id')
+            ->orderBy('accounting_records.id', 'DESC')
             ->get();
     }
 
