@@ -10,8 +10,8 @@ class AccountingRepository
 {
     public function getAccountings($perPage = 10)
     {
-        return Accounting::join('accounting_records', 'accountings.id', 'accounting_records.accounting_id')
-            ->join('entities', 'accounting_records.entity_id', 'entities.id')
+        return Accounting::leftJoin('accounting_records', 'accountings.id', 'accounting_records.accounting_id')
+            ->leftJoin('entities', 'accounting_records.entity_id', 'entities.id')
             ->select(
                 'accountings.*', 
                 DB::raw('SUM(accounting_records.price * accounting_records.amount) as total_price'),
@@ -38,7 +38,7 @@ class AccountingRepository
 
     public function getAccountingByID($id)
     {
-        return Accounting::join('accounting_records', 'accountings.id', 'accounting_records.accounting_id')
+        return Accounting::leftJoin('accounting_records', 'accountings.id', 'accounting_records.accounting_id')
             ->select(
                 'accountings.*', 
                 DB::raw('SUM(accounting_records.price * accounting_records.amount) as total_price'),
@@ -51,8 +51,8 @@ class AccountingRepository
     public function getAccountingRecords($accountingID)
     {
         return DB::table('accounting_records')->where('accounting_id', $accountingID)
-            ->join('entities', 'accounting_records.entity_id', 'entities.id')
-            ->join('accountings', 'accounting_records.accounting_id', 'accountings.id')
+            ->leftJoin('entities', 'accounting_records.entity_id', 'entities.id')
+            ->leftJoin('accountings', 'accounting_records.accounting_id', 'accountings.id')
             ->select(
                 'accounting_records.*', 
                 'accountings.title as accounting_title', 

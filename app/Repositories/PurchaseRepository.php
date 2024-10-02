@@ -10,7 +10,7 @@ class PurchaseRepository
 {
    public function getPurchases($perPage = 10)
    {
-       return Purchase::join('purchase_records', 'purchases.id', 'purchase_records.purchase_id')
+       return Purchase::LeftJoin('purchase_records', 'purchases.id', 'purchase_records.purchase_id')
            ->select(
                'purchases.*', 
                DB::raw('SUM(purchase_records.price * purchase_records.amount) as total_price'),
@@ -37,7 +37,7 @@ class PurchaseRepository
 
     public function getPurchaseByID($id)
     {
-        return Purchase::join('purchase_records', 'purchases.id', 'purchase_records.purchase_id')
+        return Purchase::LeftJoin('purchase_records', 'purchases.id', 'purchase_records.purchase_id')
             ->select(
                 'purchases.*', 
                 DB::raw('SUM(purchase_records.price * purchase_records.amount) as total_price'),
@@ -50,8 +50,8 @@ class PurchaseRepository
     public function getPurchaseRecords($purchaseID)
     {
         return DB::table('purchase_records')
-            ->join('purchases', 'purchase_records.purchase_id', 'purchases.id')
-            ->join('entities', 'purchase_records.entity_id', 'entities.id')
+            ->LeftJoin('purchases', 'purchase_records.purchase_id', 'purchases.id')
+            ->LeftJoin('entities', 'purchase_records.entity_id', 'entities.id')
             ->select(
                 'purchase_records.*', 
                 'purchases.title as purchase_title', 
