@@ -37,7 +37,14 @@ class PurchaseRepository
 
     public function getPurchaseByID($id)
     {
-        return Purchase::find($id);
+        return Purchase::join('purchase_records', 'purchases.id', 'purchase_records.purchase_id')
+            ->select(
+                'purchases.*', 
+                DB::raw('SUM(purchase_records.price * purchase_records.amount) as total_price'),
+                DB::raw('SUM(purchase_records.amount) as total_amount')
+                )
+            ->groupBy('purchases.id')
+            ->find($id);
     }
 
     public function getPurchaseRecords($purchaseID)
