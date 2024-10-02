@@ -10,7 +10,15 @@ class AccountingRepository
 {
     public function getAccountings()
     {
-        return Accounting::all();
+        return Accounting::join('accounting_records', 'accountings.id', 'accounting_records.accounting_id')
+            ->join('entities', 'accounting_records.entity_id', 'entities.id')
+            ->select(
+                'accountings.*', 
+                DB::raw('SUM(accounting_records.price * accounting_records.amount) as total_price'),
+                DB::raw('SUM(accounting_records.amount) as total_amount')
+                )
+            ->groupBy('accountings.id')
+            ->paginate();
     }
 
     public function createAccounting($data)
