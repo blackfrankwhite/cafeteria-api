@@ -38,7 +38,14 @@ class AccountingRepository
 
     public function getAccountingByID($id)
     {
-        return Accounting::find($id);
+        return Accounting::join('accounting_records', 'accountings.id', 'accounting_records.accounting_id')
+            ->select(
+                'accountings.*', 
+                DB::raw('SUM(accounting_records.price * accounting_records.amount) as total_price'),
+                DB::raw('SUM(accounting_records.amount) as total_amount')
+                )
+            ->groupBy('accountings.id')
+            ->find($id);
     }
 
     public function getAccountingRecords($accountingID)
@@ -46,7 +53,14 @@ class AccountingRepository
         return DB::table('accounting_records')->where('accounting_id', $accountingID)
             ->join('entities', 'accounting_records.entity_id', 'entities.id')
             ->join('accountings', 'accounting_records.accounting_id', 'accountings.id')
-            ->select('accounting_records.*', 'accountings.title as accounting_title', 'entities.title as entity_title')
+            ->select(
+                'accounting_records.*', 
+                'accountings.title as accounting_title', 
+                'entities.title as entity_title',
+                DB::raw('accounting_records.price * accounting_records.amount as total_price'),
+                DB::raw('SUM(accounting_records.amount) as total_amount')
+                )
+            ->groupBy('accounting_records.id')
             ->get();
     }
 
