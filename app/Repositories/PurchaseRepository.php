@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseRepository
 {
-   public function getPurchases()
+   public function getPurchases($perPage = 10)
    {
        return Purchase::join('purchase_records', 'purchases.id', 'purchase_records.purchase_id')
            ->select(
@@ -17,7 +17,7 @@ class PurchaseRepository
                DB::raw('SUM(purchase_records.amount) as total_amount')
                )
            ->groupBy('purchases.id')
-           ->paginate();
+           ->paginate($perPage);
    }
 
     public function createPurchase($data)

@@ -16,7 +16,9 @@ class AccountingController extends Controller
 
     public function getAccountings()
     {
-        return response()->json($this->accountingRepository->getAccountings());
+        $perPage = request()->get('per_page');
+
+        return response()->json($this->accountingRepository->getAccountings($perPage));
     }
 
     public function createAccounting(Request $request)

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class AccountingRepository
 {
-    public function getAccountings()
+    public function getAccountings($perPage = 10)
     {
         return Accounting::join('accounting_records', 'accountings.id', 'accounting_records.accounting_id')
             ->join('entities', 'accounting_records.entity_id', 'entities.id')
@@ -18,7 +18,7 @@ class AccountingRepository
                 DB::raw('SUM(accounting_records.amount) as total_amount')
                 )
             ->groupBy('accountings.id')
-            ->paginate();
+            ->paginate($perPage);
     }
 
     public function createAccounting($data)

@@ -191,10 +191,10 @@ class EntityRepository
         return response()->json(['message' => 'entity deleted successfully'], 201);
     }
 
-    public function getIngredients()
+    public function getIngredients($perPage = 10)
     {
         $ingredients = Entity::where('type', 'ingredient')
-            ->paginate();
+            ->paginate($perPage);
     
         return $ingredients;
     }
@@ -251,7 +251,7 @@ class EntityRepository
         return response()->json(['message' => 'Ingredient added successfully'], 201);
     }
 
-    public function getDishes()
+    public function getDishes($perPage = 10)
     {
         $dishes = Entity::where('entities.type', 'dish')
             ->leftJoin('entity_maps', 'entities.id', '=', 'entity_maps.parent_id')
@@ -261,7 +261,7 @@ class EntityRepository
                 DB::raw('SUM(child_entities.price * entity_maps.measurement_amount) as ingredients_cost')
             )
             ->groupBy('entities.id')
-            ->paginate();
+            ->paginate($perPage);
 
         $dishes->makeVisible('ingredients_cost');
     

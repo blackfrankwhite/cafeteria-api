@@ -16,7 +16,9 @@ class PurchaseController extends Controller
 
     public function getPurchases()
     {
-        return response()->json($this->purchaseRepository->getPurchases());
+        $perPage = request()->get('per_page');
+
+        return response()->json($this->purchaseRepository->getPurchases($perPage));
     }
 
     public function createPurchase(Request $request)
