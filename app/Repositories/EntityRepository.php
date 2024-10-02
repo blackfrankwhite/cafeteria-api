@@ -269,18 +269,34 @@ class EntityRepository
 
     public function getDishByID($id)
     {
-        $dish = Entity::with('ingredients.child')
-            ->findOrFail($id)
-            ->toArray();
-
-        $ingredientsArr = [];
-
-        foreach ($dish['ingredients'] as $ingredient) {
-            $ingredientsArr[]= $ingredient['child'];
-        }
-
-        $dish['ingredients'] = $ingredientsArr;
-    
+        $dish = DB::table('entities')
+            ->leftJoinSub(
+                DB::table('entity_maps as em')
+                    ->join('entities as child_entities', 'em.child_id', '=', 'child_entities.id')
+                    ->select(
+                        'em.parent_id',
+                        DB::raw('JSON_ARRAYAGG(JSON_OBJECT("id", child_entities.id, "title", child_entities.title, "type", child_entities.type, "measurement_type", em.measurement_type, "measurement_amount", em.measurement_amount, "price", child_entities.price)) as children')
+                        )
+                    ->groupBy('em.parent_id'),
+                'child_data',
+                'entities.id',
+                '=',
+                'child_data.parent_id'
+            )->select(
+                'entities.id',
+                'entities.title',
+                'entities.price',
+                'entities.measurement_type',
+                'entities.measurement_amount',
+                'entities.config',
+                DB::raw('COALESCE(child_data.children, JSON_ARRAY()) as ingredients'),
+            )
+            ->where('id', $id)
+            ->where('type', 'dish')
+            ->first();
+            
+        $dish->ingredients = json_decode($dish->ingredients, true);
+       
         return response()->json($dish);
     }
 }

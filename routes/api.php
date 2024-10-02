@@ -9,9 +9,9 @@ use App\Http\Controllers\PurchaseController;
 Route::prefix('entity')->group(function () {
 
     Route::prefix('dishes')->group(function () {
-        Route::get('', [EntityController::class, 'getDishes']);
-        Route::get('{dishID}', [EntityController::class, 'getDishByID']);
-        Route::put('{dishID}', [EntityController::class, 'updateDish']);
+        Route::get('/', [EntityController::class, 'getDishes']);
+        Route::get('/{dishID}', [EntityController::class, 'getDishByID']);
+        Route::put('/{dishID}', [EntityController::class, 'updateDish']);
     });
 
     Route::prefix('ingredients')->group(function () {
