@@ -6,6 +6,13 @@ use App\Http\Controllers\EntityController;
 use App\Http\Controllers\AccountingController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\AuthController;
+
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+
+});
 
 Route::prefix('entity')->group(function () {
 
