@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\AccountingController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\StockController;
 
 Route::prefix('entity')->group(function () {
 
@@ -56,4 +57,11 @@ Route::prefix('purchase')->group(function () {
         Route::put('/{id}', [PurchaseController::class, 'updatePurchaseRecord']);
         Route::get('/{id}', [PurchaseController::class, 'getPurchaseRecordByID']);
     });
+});
+
+Route::prefix('stock')->group(function () {
+    Route::get('/', [stockController::class, 'getStocks']);
+    Route::post('/', [stockController::class, 'createStock']);
+    Route::delete('/{id}', [stockController::class, 'deleteStock']);
+    Route::put('/{id}', [stockController::class, 'updateStock']);
 });
