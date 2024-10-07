@@ -17,7 +17,7 @@ class StockRepository
                 DB::raw('IFNULL(SUM(stocks.amount), 0) - IFNULL(SUM(accounting_records.amount), 0) as current_amount'),
                 DB::raw('CASE 
                             WHEN IFNULL(SUM(stocks.amount), 0) - IFNULL(SUM(accounting_records.amount), 0) < 0 
-                            THEN "missing" 
+                            THEN "negative" 
                             ELSE "ok" 
                          END as status')
             )
