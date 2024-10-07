@@ -17,8 +17,10 @@ class PurchaseController extends Controller
     public function getPurchases()
     {
         $perPage = request()->get('per_page');
+        $startDate = request()->get('start_date');
+        $endDate = request()->get('end_date');
 
-        return response()->json($this->purchaseRepository->getPurchases($perPage));
+        return response()->json($this->purchaseRepository->getPurchases($perPage, $startDate, $endDate));
     }
 
     public function createPurchase(Request $request)

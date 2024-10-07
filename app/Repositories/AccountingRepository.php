@@ -8,7 +8,20 @@ use Illuminate\Support\Facades\DB;
 
 class AccountingRepository
 {
-    public function getAccountings($perPage = 10)
+    public function getAccountings($perPage = 10, $startDate = null, $endDate = null)
+    {
+        $accountings = $this->getPaginatedAccountings($perPage, $startDate, $endDate);
+
+        $totalAmounts = $this->getTotalAccountingAmounts($startDate, $endDate);
+    
+        $accountings = $accountings->toArray();
+        $accountings['total_amount'] = $totalAmounts->total_amount ?? 0;
+        $accountings['total_price'] = $totalAmounts->total_price ?? 0;
+    
+        return $accountings;
+    }
+
+    public function getPaginatedAccountings($perPage = 10, $startDate = null, $endDate = null)
     {
         return Accounting::leftJoin('accounting_records', 'accountings.id', 'accounting_records.accounting_id')
             ->leftJoin('entities', 'accounting_records.entity_id', 'entities.id')
@@ -16,11 +29,33 @@ class AccountingRepository
                 'accountings.*', 
                 DB::raw('SUM(accounting_records.price * accounting_records.amount) as total_price'),
                 DB::raw('SUM(accounting_records.amount) as total_amount')
-                )
+            )
+            ->when($startDate, function ($query, $startDate) {
+                return $query->where('accountings.created_at', '>=', $startDate);
+            })
+            ->when($endDate, function ($query, $endDate) {
+                return $query->where('accountings.created_at', '<=', $endDate);
+            })
             ->groupBy('accountings.id')
             ->orderBy('accountings.id', 'DESC')
             ->paginate($perPage);
     }
+
+    public function getTotalAccountingAmounts($startDate = null, $endDate = null)
+    {
+        return Accounting::leftJoin('accounting_records', 'accountings.id', 'accounting_records.accounting_id')
+            ->select(
+                DB::raw('SUM(accounting_records.price * accounting_records.amount) as total_price'),
+                DB::raw('SUM(accounting_records.amount) as total_amount')
+            )
+            ->when($startDate, function ($query, $startDate) {
+                return $query->where('accountings.created_at', '>=', $startDate);
+            })
+            ->when($endDate, function ($query, $endDate) {
+                return $query->where('accountings.created_at', '<=', $endDate);
+            })
+            ->first();
+    }    
 
     public function createAccounting($data)
     {

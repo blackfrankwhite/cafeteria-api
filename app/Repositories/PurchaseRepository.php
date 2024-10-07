@@ -8,18 +8,52 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseRepository
 {
-   public function getPurchases($perPage = 10)
-   {
-       return Purchase::LeftJoin('purchase_records', 'purchases.id', 'purchase_records.purchase_id')
+    public function getPurchases($perPage = 10, $startDate = null, $endDate = null)
+    {
+        $purchases = $this->getPaginatedPurchases($perPage, $startDate, $endDate);
+        $totalAmounts = $this->getTotalPurchaseAmounts($startDate, $endDate);
+
+        $purchases = $purchases->toArray();
+        $purchases['total_amount'] = $totalAmounts->total_amount ?? 0;
+        $purchases['total_price'] = $totalAmounts->total_price ?? 0;
+    
+        return $purchases;
+    }
+
+    public function getPaginatedPurchases($perPage = 10, $startDate = null, $endDate = null)
+    {
+        return Purchase::leftJoin('purchase_records', 'purchases.id', 'purchase_records.purchase_id')
             ->select(
                 'purchases.*', 
                 DB::raw('SUM(purchase_records.price * purchase_records.amount) as total_price'),
                 DB::raw('SUM(purchase_records.amount) as total_amount')
-                )
+            )
+            ->when($startDate, function ($query, $startDate) {
+                return $query->where('purchases.date', '>=', $startDate);
+            })
+            ->when($endDate, function ($query, $endDate) {
+                return $query->where('purchases.date', '<=', $endDate);
+            })
             ->groupBy('purchases.id')
             ->orderBy('purchases.id', 'DESC')
             ->paginate($perPage);
-   }
+    }
+
+    public function getTotalPurchaseAmounts($startDate = null, $endDate = null)
+    {
+        return Purchase::leftJoin('purchase_records', 'purchases.id', 'purchase_records.purchase_id')
+            ->select(
+                DB::raw('SUM(purchase_records.price * purchase_records.amount) as total_price'),
+                DB::raw('SUM(purchase_records.amount) as total_amount')
+            )
+            ->when($startDate, function ($query, $startDate) {
+                return $query->where('purchases.date', '>=', $startDate);
+            })
+            ->when($endDate, function ($query, $endDate) {
+                return $query->where('purchases.date', '<=', $endDate);
+            })
+            ->first();
+    }
 
     public function createPurchase($data)
     {
