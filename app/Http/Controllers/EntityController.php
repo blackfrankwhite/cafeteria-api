@@ -65,8 +65,9 @@ class EntityController extends Controller
     public function getDishes(Request $request)
     {
         $perPage = $request->get('per_page');
+        $keyword = $request->get('keyword');
 
-        return $this->repository->getDishes($perPage);
+        return $this->repository->getDishes($perPage, $keyword);
     }
 
     public function getDishByID(Request $request, $dishID)

@@ -253,21 +253,32 @@ class EntityRepository
         return response()->json(['message' => 'Ingredient added successfully'], 201);
     }
 
-    public function getDishes($perPage = 10)
+    public function getDishes($perPage = 10, $keyword = null)
     {
         $dishes = Entity::where('entities.type', 'dish')
             ->leftJoin('entity_maps', 'entities.id', '=', 'entity_maps.parent_id')
             ->leftJoin('entities as child_entities', 'entity_maps.child_id', '=', 'child_entities.id')
+            ->leftJoin('stocks', 'entities.id', '=', 'stocks.entity_id')
+            ->leftJoin('accounting_records', 'entities.id', '=', 'accounting_records.entity_id')
             ->select(
                 'entities.*',
-                DB::raw('SUM(child_entities.price * entity_maps.measurement_amount) as ingredients_cost')
+                DB::raw('SUM(child_entities.price * entity_maps.measurement_amount) as ingredients_cost'),
+                DB::raw('(COALESCE(SUM(DISTINCT stocks.amount), 0) - COALESCE(SUM(DISTINCT accounting_records.amount), 0)) as stock_amount'),
+                DB::raw('CASE 
+                    WHEN (COALESCE(SUM(DISTINCT stocks.amount), 0) - COALESCE(SUM(DISTINCT accounting_records.amount), 0)) > 0 THEN "positive"
+                    WHEN (COALESCE(SUM(DISTINCT stocks.amount), 0) - COALESCE(SUM(DISTINCT accounting_records.amount), 0)) < 0 THEN "negative"
+                    ELSE "zero"
+                END as status')
             )
+            ->when($keyword, function ($query, $keyword) {
+                return $query->where('entities.title', 'like', "%$keyword%");
+            })
             ->groupBy('entities.id')
             ->orderBy('entities.id', 'DESC')
             ->paginate($perPage);
-
-        $dishes->makeVisible('ingredients_cost');
     
+        $dishes->makeVisible(['ingredients_cost', 'stock_amount', 'status']);
+        
         return $dishes;
     }
 
