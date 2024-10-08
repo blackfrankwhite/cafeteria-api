@@ -195,9 +195,17 @@ class EntityRepository
     public function getIngredients($perPage = 10, $keyword = null)
     {
         $ingredients = Entity::where('entities.type', 'ingredient')
-            ->leftJoin('purchase_records', 'entities.id', '=', 'purchase_records.entity_id')
-            ->leftJoin('entity_maps', 'entities.id', '=', 'entity_maps.child_id')
-            ->leftJoin('stocks', 'entity_maps.parent_id', '=', 'stocks.entity_id')
+            ->leftJoin('purchase_records', function($join) {
+                $join->on('entities.id', '=', 'purchase_records.entity_id')
+                    ->whereNull('purchase_records.deleted_at');
+            })
+            ->leftJoin('entity_maps', function($join) {
+                $join->on('entities.id', '=', 'entity_maps.child_id');
+            })
+            ->leftJoin('stocks', function($join) {
+                $join->on('entities.id', '=', 'stocks.entity_id')
+                    ->whereNull('stocks.deleted_at');
+            })
             ->select(
                 'entities.*',
                 DB::raw('ROUND((COALESCE(SUM(purchase_records.amount), 0) - COALESCE(SUM(stocks.amount * entity_maps.measurement_amount), 0)), 2) as stock_amount'),
@@ -274,8 +282,13 @@ class EntityRepository
     public function getDishes($perPage = 10, $keyword = null)
     {
         $dishes = Entity::where('entities.type', 'dish')
-            ->leftJoin('entity_maps', 'entities.id', '=', 'entity_maps.parent_id')
-            ->leftJoin('entities as child_entities', 'entity_maps.child_id', '=', 'child_entities.id')
+            ->leftJoin('entity_maps', function($join) {
+                $join->on('entities.id', '=', 'entity_maps.parent_id');
+            })
+            ->leftJoin('entities as child_entities', function($join) {
+                $join->on('entity_maps.child_id', '=', 'child_entities.id')
+                    ->whereNull('child_entities.deleted_at');
+            })
             ->leftJoin('stocks', function($join) {
                 $join->on('entities.id', '=', 'stocks.entity_id')
                     ->whereNull('stocks.deleted_at');
