@@ -16,4 +16,9 @@ class Stock extends Model
         'amount',
         'date',
     ];
+
+    public function entity()
+    {
+        return $this->belongsTo(Entity::class);
+    }
 }

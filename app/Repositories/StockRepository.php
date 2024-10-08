@@ -7,27 +7,22 @@ use App\Models\Stock;
 
 class StockRepository
 {
-    public function getStocks($perPage, $keyword)
-    {
-        return DB::table('entities')
-            ->leftJoin('stocks', 'entities.id', '=', 'stocks.entity_id')
-            ->leftJoin('accounting_records', 'entities.id', '=', 'accounting_records.entity_id')
-            ->select(
-                'entities.title as entity_title',
-                DB::raw('IFNULL(SUM(stocks.amount), 0) - IFNULL(SUM(accounting_records.amount), 0) as current_amount'),
-                DB::raw('CASE 
-                            WHEN IFNULL(SUM(stocks.amount), 0) - IFNULL(SUM(accounting_records.amount), 0) < 0 
-                            THEN "negative" 
-                            ELSE "ok" 
-                         END as status')
-            )
-            ->when($keyword, function ($query, $keyword) {
-                return $query->where('entities.title', 'like', "%$keyword%");
+    public function getStocks($perPage, $startDate, $endDate, $keyword)
+    {    
+        return Stock::orderBy('id', 'DESC')
+            ->with('entity')
+            ->when($startDate, function ($query, $startDate) {
+                return $query->where('date', '>=', $startDate);
             })
-            ->groupBy('entities.id', 'entities.title')
-            ->havingRaw('current_amount != 0')
-            ->orderBy('current_amount', 'DESC')
-            ->paginate();
+            ->when($endDate, function ($query, $endDate) {
+                return $query->where('date', '<=', $endDate);
+            })
+            ->when($keyword, function ($query, $keyword) {
+                return $query->whereHas('entity', function ($query) use ($keyword) {
+                    $query->where('title', 'like', "%$keyword%");
+                });
+            })
+            ->paginate($perPage);
     }    
 
     public function createStock($data)
