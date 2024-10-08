@@ -297,7 +297,7 @@ class EntityRepository
             ->select(
                 'entities.*',
                 DB::raw('SUM(child_entities.price * entity_maps.measurement_amount) as ingredients_cost'),
-                DB::raw('(COALESCE(SUM(DISTINCT stocks.amount), 0) - COALESCE(SUM(DISTINCT accounting_records.amount), 0)) as stock_amount'),
+                DB::raw('(COALESCE(SUM(stocks.amount), 0) - COALESCE(SUM(accounting_records.amount), 0)) as stock_amount'),
                 DB::raw('CASE 
                     WHEN (COALESCE(SUM(DISTINCT stocks.amount), 0) - COALESCE(SUM(DISTINCT accounting_records.amount), 0)) > 0 THEN "positive"
                     WHEN (COALESCE(SUM(DISTINCT stocks.amount), 0) - COALESCE(SUM(DISTINCT accounting_records.amount), 0)) < 0 THEN "negative"
