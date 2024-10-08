@@ -64,6 +64,8 @@ class AccountingRepository
 
     public function deleteAccounting($id)
     {
+        AccountingRecords::where('accounting_id', $id)->delete();
+        
         return Accounting::destroy($id);
     }
 

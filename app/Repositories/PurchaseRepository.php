@@ -62,6 +62,8 @@ class PurchaseRepository
 
     public function deletePurchase($id)
     {
+        PurchaseRecord::where('purchase_id', $id)->delete();
+        
         return Purchase::destroy($id);
     }
 
