@@ -282,25 +282,46 @@ class EntityRepository
     public function getDishes($perPage = 10, $keyword = null)
     {
         $dishes = Entity::where('entities.type', 'dish')
-            ->leftJoin('entity_maps', function($join) {
-                $join->on('entities.id', '=', 'entity_maps.parent_id');
-            })
-            ->leftJoin('entities as child_entities', function($join) {
-                $join->on('entity_maps.child_id', '=', 'child_entities.id')
-                    ->whereNull('child_entities.deleted_at');
-            })
-            ->leftJoin('stocks', function($join) {
-                $join->on('entities.id', '=', 'stocks.entity_id')
-                    ->whereNull('stocks.deleted_at');
-            })
-            ->leftJoin('accounting_records', 'entities.id', '=', 'accounting_records.entity_id')
             ->select(
                 'entities.*',
-                DB::raw('SUM(child_entities.price * entity_maps.measurement_amount) as ingredients_cost'),
-                DB::raw('(COALESCE(SUM(stocks.amount), 0) - COALESCE(SUM(accounting_records.amount), 0)) as stock_amount'),
-                DB::raw('CASE 
-                    WHEN (COALESCE(SUM(DISTINCT stocks.amount), 0) - COALESCE(SUM(DISTINCT accounting_records.amount), 0)) > 0 THEN "positive"
-                    WHEN (COALESCE(SUM(DISTINCT stocks.amount), 0) - COALESCE(SUM(DISTINCT accounting_records.amount), 0)) < 0 THEN "negative"
+                DB::raw('(
+                    SELECT COALESCE(SUM(stocks.amount), 0)
+                    FROM stocks
+                    WHERE stocks.entity_id = entities.id
+                    AND stocks.deleted_at IS NULL
+                ) - (
+                    SELECT COALESCE(SUM(accounting_records.amount), 0)
+                    FROM accounting_records
+                    WHERE accounting_records.entity_id = entities.id
+                ) as stock_amount'),
+                
+                DB::raw('COALESCE((
+                    SELECT SUM(child_entities.price * entity_maps.measurement_amount)
+                    FROM entity_maps
+                    JOIN entities AS child_entities ON entity_maps.child_id = child_entities.id
+                    WHERE entity_maps.parent_id = entities.id
+                    AND child_entities.deleted_at IS NULL
+                ), 0) as ingredients_cost'),
+                
+                DB::raw('CASE
+                    WHEN ((SELECT COALESCE(SUM(stocks.amount), 0)
+                            FROM stocks
+                            WHERE stocks.entity_id = entities.id
+                            AND stocks.deleted_at IS NULL
+                        ) - (
+                            SELECT COALESCE(SUM(accounting_records.amount), 0)
+                            FROM accounting_records
+                            WHERE accounting_records.entity_id = entities.id
+                        )) > 0 THEN "positive"
+                    WHEN ((SELECT COALESCE(SUM(stocks.amount), 0)
+                            FROM stocks
+                            WHERE stocks.entity_id = entities.id
+                            AND stocks.deleted_at IS NULL
+                        ) - (
+                            SELECT COALESCE(SUM(accounting_records.amount), 0)
+                            FROM accounting_records
+                            WHERE accounting_records.entity_id = entities.id
+                        )) < 0 THEN "negative"
                     ELSE "zero"
                 END as status')
             )
@@ -312,9 +333,9 @@ class EntityRepository
             ->paginate($perPage);
     
         $dishes->makeVisible(['ingredients_cost', 'stock_amount', 'status']);
-        
+    
         return $dishes;
-    }
+    }    
 
     public function getMixes()
     {
