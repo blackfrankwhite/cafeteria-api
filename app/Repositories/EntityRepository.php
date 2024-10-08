@@ -195,25 +195,48 @@ class EntityRepository
     public function getIngredients($perPage = 10, $keyword = null)
     {
         $ingredients = Entity::where('entities.type', 'ingredient')
-            ->leftJoin('purchase_records', function($join) {
-                $join->on('entities.id', '=', 'purchase_records.entity_id')
-                    ->whereNull('purchase_records.deleted_at');
-            })
-            ->leftJoin('entity_maps', function($join) {
-                $join->on('entities.id', '=', 'entity_maps.child_id');
-            })
-            ->leftJoin('stocks', function($join) {
-                $join->on('entities.id', '=', 'stocks.entity_id')
-                    ->whereNull('stocks.deleted_at');
-            })
             ->select(
                 'entities.*',
-                DB::raw('ROUND((COALESCE(SUM(purchase_records.amount), 0) - COALESCE(SUM(stocks.amount * entity_maps.measurement_amount), 0)), 2) as stock_amount'),
+                DB::raw('ROUND((COALESCE((
+                    SELECT SUM(purchase_records.amount)
+                    FROM purchase_records
+                    WHERE purchase_records.entity_id = entities.id
+                    AND purchase_records.deleted_at IS NULL
+                ), 0) - COALESCE((
+                    SELECT SUM(stocks.amount * entity_maps.measurement_amount)
+                    FROM stocks
+                    JOIN entity_maps ON stocks.entity_id = entity_maps.child_id
+                    WHERE stocks.entity_id = entities.id
+                    AND stocks.deleted_at IS NULL
+                ), 0)), 2) as stock_amount'),
+                
                 DB::raw('CASE 
-                            WHEN (ROUND((COALESCE(SUM(purchase_records.amount), 0) - COALESCE(SUM(stocks.amount * entity_maps.measurement_amount), 0)), 2)) > 0 THEN "positive"
-                            WHEN (ROUND((COALESCE(SUM(purchase_records.amount), 0) - COALESCE(SUM(stocks.amount * entity_maps.measurement_amount), 0)), 2)) < 0 THEN "negative"
-                            ELSE "zero"
-                        END as stock_status')
+                    WHEN (ROUND((COALESCE((
+                        SELECT SUM(purchase_records.amount)
+                        FROM purchase_records
+                        WHERE purchase_records.entity_id = entities.id
+                        AND purchase_records.deleted_at IS NULL
+                    ), 0) - COALESCE((
+                        SELECT SUM(stocks.amount * entity_maps.measurement_amount)
+                        FROM stocks
+                        JOIN entity_maps ON stocks.entity_id = entity_maps.child_id
+                        WHERE stocks.entity_id = entities.id
+                        AND stocks.deleted_at IS NULL
+                    ), 0)), 2)) > 0 THEN "positive"
+                    WHEN (ROUND((COALESCE((
+                        SELECT SUM(purchase_records.amount)
+                        FROM purchase_records
+                        WHERE purchase_records.entity_id = entities.id
+                        AND purchase_records.deleted_at IS NULL
+                    ), 0) - COALESCE((
+                        SELECT SUM(stocks.amount * entity_maps.measurement_amount)
+                        FROM stocks
+                        JOIN entity_maps ON stocks.entity_id = entity_maps.child_id
+                        WHERE stocks.entity_id = entities.id
+                        AND stocks.deleted_at IS NULL
+                    ), 0)), 2)) < 0 THEN "negative"
+                    ELSE "zero"
+                END as stock_status')
             )
             ->when($keyword, function ($query, $keyword) {
                 return $query->where('entities.title', 'like', "%$keyword%");
@@ -225,7 +248,7 @@ class EntityRepository
         $ingredients->makeVisible(['stock_amount', 'stock_status']);
     
         return $ingredients;
-    }    
+    }     
 
     public function updateIngredient($id, $data)
     {
