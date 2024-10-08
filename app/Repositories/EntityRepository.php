@@ -316,6 +316,7 @@ class EntityRepository
                     SELECT COALESCE(SUM(accounting_records.amount), 0)
                     FROM accounting_records
                     WHERE accounting_records.entity_id = entities.id
+                    WHERE accounting_records.deleted_at IS NULL
                 ) as stock_amount'),
                 
                 DB::raw('COALESCE((
@@ -335,6 +336,7 @@ class EntityRepository
                             SELECT COALESCE(SUM(accounting_records.amount), 0)
                             FROM accounting_records
                             WHERE accounting_records.entity_id = entities.id
+                            WHERE accounting_records.deleted_at IS NULL
                         )) > 0 THEN "positive"
                     WHEN ((SELECT COALESCE(SUM(stocks.amount), 0)
                             FROM stocks
@@ -344,6 +346,7 @@ class EntityRepository
                             SELECT COALESCE(SUM(accounting_records.amount), 0)
                             FROM accounting_records
                             WHERE accounting_records.entity_id = entities.id
+                            WHERE accounting_records.deleted_at IS NULL
                         )) < 0 THEN "negative"
                     ELSE "zero"
                 END as status')
