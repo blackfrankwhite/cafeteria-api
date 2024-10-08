@@ -258,7 +258,10 @@ class EntityRepository
         $dishes = Entity::where('entities.type', 'dish')
             ->leftJoin('entity_maps', 'entities.id', '=', 'entity_maps.parent_id')
             ->leftJoin('entities as child_entities', 'entity_maps.child_id', '=', 'child_entities.id')
-            ->leftJoin('stocks', 'entities.id', '=', 'stocks.entity_id')
+            ->leftJoin('stocks', function($join) {
+                $join->on('entities.id', '=', 'stocks.entity_id')
+                    ->whereNull('stocks.deleted_at');
+            })
             ->leftJoin('accounting_records', 'entities.id', '=', 'accounting_records.entity_id')
             ->select(
                 'entities.*',
