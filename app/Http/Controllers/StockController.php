@@ -17,8 +17,8 @@ class StockController extends Controller
     public function getStocks()
     {
         $perPage = request()->get('per_page');
-        $startDate = request()->get('startDate');
-        $endDate = request()->get('endDate');
+        $startDate = request()->get('start_date');
+        $endDate = request()->get('end_date');
         $keyword = request()->get('keyword');
 
         return response()->json($this->stockRepository->getStocks($perPage, $startDate, $endDate, $keyword));
