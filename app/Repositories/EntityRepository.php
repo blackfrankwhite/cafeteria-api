@@ -205,8 +205,8 @@ class EntityRepository
                 ), 0) - COALESCE((
                     SELECT SUM(stocks.amount * entity_maps.measurement_amount)
                     FROM stocks
-                    JOIN entity_maps ON stocks.entity_id = entity_maps.child_id
-                    WHERE stocks.entity_id = entities.id
+                    JOIN entity_maps ON stocks.entity_id = entity_maps.parent_id
+                    WHERE entity_maps.child_id = entities.id
                     AND stocks.deleted_at IS NULL
                 ), 0)), 2) as stock_amount'),
                 
@@ -219,8 +219,8 @@ class EntityRepository
                     ), 0) - COALESCE((
                         SELECT SUM(stocks.amount * entity_maps.measurement_amount)
                         FROM stocks
-                        JOIN entity_maps ON stocks.entity_id = entity_maps.child_id
-                        WHERE stocks.entity_id = entities.id
+                        JOIN entity_maps ON stocks.entity_id = entity_maps.parent_id
+                        WHERE entity_maps.child_id = entities.id
                         AND stocks.deleted_at IS NULL
                     ), 0)), 2)) > 0 THEN "positive"
                     WHEN (ROUND((COALESCE((
@@ -231,8 +231,8 @@ class EntityRepository
                     ), 0) - COALESCE((
                         SELECT SUM(stocks.amount * entity_maps.measurement_amount)
                         FROM stocks
-                        JOIN entity_maps ON stocks.entity_id = entity_maps.child_id
-                        WHERE stocks.entity_id = entities.id
+                        JOIN entity_maps ON stocks.entity_id = entity_maps.parent_id
+                        WHERE entity_maps.child_id = entities.id
                         AND stocks.deleted_at IS NULL
                     ), 0)), 2)) < 0 THEN "negative"
                     ELSE "zero"
