@@ -192,14 +192,32 @@ class EntityRepository
         return response()->json(['message' => 'entity deleted successfully'], 201);
     }
 
-    public function getIngredients($perPage = 10)
+    public function getIngredients($perPage = 10, $keyword = null)
     {
-        $ingredients = Entity::where('type', 'ingredient')
-            ->orderBy('id', 'DESC')
+        $ingredients = Entity::where('entities.type', 'ingredient')
+            ->leftJoin('purchase_records', 'entities.id', '=', 'purchase_records.entity_id')
+            ->leftJoin('entity_maps', 'entities.id', '=', 'entity_maps.child_id')
+            ->leftJoin('stocks', 'entity_maps.parent_id', '=', 'stocks.entity_id')
+            ->select(
+                'entities.*',
+                DB::raw('ROUND((COALESCE(SUM(purchase_records.amount), 0) - COALESCE(SUM(stocks.amount * entity_maps.measurement_amount), 0)), 2) as stock_amount'),
+                DB::raw('CASE 
+                            WHEN (ROUND((COALESCE(SUM(purchase_records.amount), 0) - COALESCE(SUM(stocks.amount * entity_maps.measurement_amount), 0)), 2)) > 0 THEN "positive"
+                            WHEN (ROUND((COALESCE(SUM(purchase_records.amount), 0) - COALESCE(SUM(stocks.amount * entity_maps.measurement_amount), 0)), 2)) < 0 THEN "negative"
+                            ELSE "zero"
+                        END as stock_status')
+            )
+            ->when($keyword, function ($query, $keyword) {
+                return $query->where('entities.title', 'like', "%$keyword%");
+            })
+            ->groupBy('entities.id')
+            ->orderBy('entities.id', 'DESC')
             ->paginate($perPage);
     
+        $ingredients->makeVisible(['stock_amount', 'stock_status']);
+    
         return $ingredients;
-    }
+    }    
 
     public function updateIngredient($id, $data)
     {

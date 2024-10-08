@@ -58,8 +58,9 @@ class EntityController extends Controller
     public function getIngredients(Request $request)
     {
         $perPage = $request->get('per_page');
+        $keyword = $request->get('keyword');
 
-        return $this->repository->getIngredients($perPage);
+        return $this->repository->getIngredients($perPage, $keyword);
     }
 
     public function getDishes(Request $request)
