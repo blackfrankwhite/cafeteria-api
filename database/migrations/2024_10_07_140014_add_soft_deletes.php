@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::table('purchases', function (Blueprint $table) {
             $table->softDeletes();
+
+            $table->unique(['date', 'deleted_at']);
         });
 
         Schema::table('purchase_records', function (Blueprint $table) {
@@ -21,6 +23,8 @@ return new class extends Migration
 
         Schema::table('accountings', function (Blueprint $table) {
             $table->softDeletes();
+
+            $table->unique(['date', 'deleted_at']);
         });
 
         Schema::table('accounting_records', function (Blueprint $table) {
@@ -34,6 +38,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('purchases', function (Blueprint $table) {
+            $table->dropUnique(['date', 'deleted_at']);
             $table->dropSoftDeletes();
         });
 
@@ -42,6 +47,7 @@ return new class extends Migration
         });
 
         Schema::table('accountings', function (Blueprint $table) {
+            $table->dropUnique(['date', 'deleted_at']);
             $table->dropSoftDeletes();
         });
 
